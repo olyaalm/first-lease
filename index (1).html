@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>First Lease — Rentals + Roommates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--b900:#0a2257;--b800:#0f3b8c;--b700:#1d4ed8;--b600:#2563eb;--b500:#3b82f6;--b300:#93c5fd;--b200:#bfdbfe;--b100:#dbeafe;--b50:#eff6ff;
+--ink:#0f172a;--ink2:#334155;--muted:#64748b;--line:#e2e8f0;--bg:#f6f8fc;--ok:#059669;--okbg:#ecfdf5}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#dfe8f7;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--ink)}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
+input,select,textarea{font-family:inherit;font-size:15px}
+.app{max-width:480px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,59,140,.12)}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fff;border-bottom:1px solid var(--line);z-index:6}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:19px;letter-spacing:-.02em;color:var(--b900)}
+.logo .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--b500),var(--b800));display:grid;place-items:center}
+.me-btn{width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid var(--b200);padding:0}
+main{flex:1;overflow-y:auto;overflow-x:hidden;position:relative}
+nav.bottom{display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:6}
+nav.bottom button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--muted);padding:6px 0;position:relative}
+nav.bottom button svg{width:22px;height:22px}
+nav.bottom button.on{color:var(--b600)}
+.badge{position:absolute;top:2px;right:calc(50% - 20px);background:#dc2626;color:#fff;font-size:10px;min-width:16px;height:16px;border-radius:8px;display:grid;place-items:center;padding:0 4px}
+.seg{display:flex;background:#e6edf9;border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;padding:7px 12px;border-radius:8px;font-weight:700;font-size:13px;color:var(--b800)}
+.seg button.on{background:#fff;box-shadow:0 1px 4px rgba(15,59,140,.15);color:var(--b600)}
+
+/* filters */
+.fbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.fbar::-webkit-scrollbar{display:none}
+.fbtn{flex:none;display:flex;align-items:center;gap:4px;padding:7px 11px;border-radius:8px;background:#fff;border:1px solid #cbd5e1;font-size:12.5px;font-weight:600;color:var(--ink2);white-space:nowrap}
+.fbtn svg{width:12px;height:12px;opacity:.7}
+.fbtn.active{background:var(--b50);border-color:var(--b500);color:var(--b700)}
+.fbtn.open{background:var(--b600);border-color:var(--b600);color:#fff}
+.fshade{position:absolute;inset:0;z-index:15;background:rgba(8,20,50,.18);display:none}.fshade.on{display:block}
+.fpanel{position:absolute;left:10px;right:10px;z-index:16;background:#fff;border-radius:14px;box-shadow:0 16px 40px rgba(10,34,87,.25);display:none;flex-direction:column;max-height:62%;border:1px solid var(--line)}
+.fpanel.on{display:flex}
+.fp-body{overflow-y:auto;padding:14px 14px 6px}
+.fp-foot{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+.fp-h{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--b800);margin:4px 0 8px}
+.opts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.opt{padding:8px 12px;border-radius:9px;border:1px solid #cbd5e1;background:#fff;font-size:13px;font-weight:600;color:var(--ink2)}
+.opt.on{background:var(--b600);border-color:var(--b600);color:#fff}
+.opt:disabled{opacity:.35}
+.chk{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:14px;width:100%;text-align:left}
+.sw{width:42px;height:24px;border-radius:12px;background:#cbd5e1;position:relative;flex:none;transition:.2s}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.chk.on .sw{background:var(--b600)}.chk.on .sw::after{left:21px}
+.range-row{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:4px}
+input[type=range]{width:100%;accent-color:var(--b600);margin:0 0 12px}
+select.sel{border:1px solid #cbd5e1;border-radius:9px;padding:8px 10px;background:#fff;width:100%}
+
+/* listing cards (Zillow-like) */
+.pad{padding:14px}
+.h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:2px 0 4px}
+.lead{color:var(--muted);font-size:13.5px;margin:0 0 12px;line-height:1.45}
+.search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:9px 12px}
+.search{min-width:0}.search input{border:none;outline:none;flex:1;background:none;min-width:0;width:100%}
+.hcard{background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-bottom:14px;text-align:left;width:100%;display:block;box-shadow:0 2px 8px rgba(15,40,100,.05)}
+.hcard .ph{height:190px;position:relative;overflow:hidden}
+.hcard .ph svg.art{width:100%;height:100%;display:block}
+.heart{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center}
+.heart svg{width:20px;height:20px}
+.ptag{position:absolute;top:10px;left:10px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,.95);color:var(--b900)}
+.hcard .bd{padding:10px 12px 12px}
+.hprice{font-size:20px;font-weight:800;letter-spacing:-.01em}
+.hprice small{font-size:13px;font-weight:600;color:var(--muted)}
+.hfacts{font-size:13.5px;color:var(--ink2);margin:2px 0}
+.hfacts b{font-weight:700}
+.haddr{font-size:13px;color:var(--muted)}
+.hby{font-size:11.5px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:10px;font-weight:700;font-size:14.5px;background:var(--b600);color:#fff}
+.btn.ghost{background:#fff;color:var(--b700);border:1px solid var(--b200)}
+.btn.block{width:100%}.btn.sm{padding:8px 12px;font-size:13px}
+.row{display:flex;align-items:center;gap:8px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sortsel{border:none;background:none;font-weight:700;color:var(--b700);font-size:13px}
+.c{font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--b50);color:var(--b800);border:1px solid var(--b100)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+
+/* roommate swipe */
+.swipe-wrap{display:flex;flex-direction:column;height:100%;padding:10px 12px 8px;gap:8px}
+.stack{position:relative;flex:1;min-height:340px}
+.card{position:absolute;inset:0;border-radius:22px;background:#fff;box-shadow:0 10px 30px rgba(15,40,100,.16);overflow:hidden;touch-action:none;user-select:none;display:flex;flex-direction:column}
+.card.back{transform:scale(.95) translateY(12px);opacity:.7;pointer-events:none}
+.rm-hero{flex:1;position:relative;min-height:0;display:grid;place-items:center}
+.shade{position:absolute;inset:auto 0 0 0;height:40%;background:linear-gradient(transparent,rgba(5,20,55,.85))}
+.over{position:absolute;left:16px;right:16px;bottom:14px;color:#fff}
+.over h3{margin:0 0 3px;font-size:24px}
+.tagrow{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:700;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.93);color:var(--b900)}
+.info{padding:12px 16px 14px;display:grid;gap:8px}
+.common{background:var(--okbg);border:1px solid #a7f3d0;border-radius:12px;padding:9px 10px}
+.common .lbl{font-size:11px;font-weight:800;color:#047857;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.cc{font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;background:#fff;color:#065f46;border:1px solid #a7f3d0}
+.stamp{position:absolute;top:30px;padding:6px 14px;border:4px solid;border-radius:10px;font-weight:800;font-size:24px;opacity:0;z-index:3;transform:rotate(-14deg);background:rgba(255,255,255,.85)}
+.stamp.yes{left:22px;color:#10b981;border-color:#10b981}.stamp.no{right:22px;color:#ef4444;border-color:#ef4444;transform:rotate(14deg)}
+.actions{display:flex;justify-content:center;align-items:center;gap:18px}
+.act{width:56px;height:56px;border-radius:50%;background:#fff;box-shadow:0 4px 14px rgba(15,40,100,.15);display:grid;place-items:center}
+.act.sm{width:44px;height:44px}.act svg{width:25px;height:25px}.act.sm svg{width:19px;height:19px}
+.hint{text-align:center;font-size:11px;color:var(--muted);font-weight:600}
+.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:30px;color:var(--muted)}
+.empty h3{color:var(--ink);margin:10px 0 6px}
+.empty-state{text-align:center;color:var(--muted);padding:40px 24px}
+
+/* sheet */
+.backdrop{position:absolute;inset:0;background:rgba(8,20,50,.45);opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
+.backdrop.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:94%;background:#fff;border-radius:20px 20px 0 0;transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:21;display:flex;flex-direction:column}
+.sheet.on{transform:none}
+.grab{width:42px;height:5px;border-radius:3px;background:#cbd5e1;margin:8px auto 2px;flex:none}
+.sheet .close{position:absolute;top:10px;right:12px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.95);display:grid;place-items:center;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.sheet .body{overflow-y:auto;padding:0 0 10px}
+.dhero{height:220px;position:relative;margin:6px 12px 0;border-radius:14px;overflow:hidden}
+.dhero svg.art{width:100%;height:100%}
+.sec{padding:14px 16px 4px}
+.sec h5{margin:0 0 10px;font-size:16px;color:var(--ink)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:9px 12px;font-size:14px}
+.kv span:nth-child(odd){color:var(--muted)}
+.kv span:nth-child(even){font-weight:600;text-align:right}
+.sticky-cta{position:sticky;bottom:0;padding:12px 16px;background:linear-gradient(rgba(255,255,255,0),#fff 30%);display:flex;gap:8px}
+.person-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;width:100%;text-align:left}
+.person-row b{display:block;font-size:14px}.person-row span{font-size:12px;color:var(--muted)}
+.rmcta{display:flex;gap:12px;align-items:center;background:var(--b50);border:1px solid var(--b100);border-radius:14px;padding:12px;width:100%;text-align:left}
+.field{display:grid;gap:5px;margin-bottom:12px}
+.field label{font-size:12.5px;font-weight:700;color:var(--ink2)}
+.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:10px;padding:10px 11px;background:#fff;outline:none;width:100%}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.prompt{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:8px}
+
+/* chat */
+.conv{display:flex;gap:12px;align-items:center;padding:12px 14px;background:#fff;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.conv .t{flex:1;min-width:0}.conv .t b{display:block;font-size:14.5px}
+.conv .t span{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thread{display:flex;flex-direction:column;height:100%}
+.thread-h{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--line)}
+.thread-h .who{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left;padding:4px;border-radius:10px}
+.prop-strip{display:flex;gap:10px;align-items:center;padding:8px 12px;background:var(--b50);border-bottom:1px solid var(--b100);width:100%;text-align:left}
+.prop-strip .th{width:44px;height:44px;border-radius:8px;overflow:hidden;flex:none}.prop-strip .th svg{width:100%;height:100%}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
+.bub{max-width:80%;padding:9px 12px;border-radius:16px;font-size:14px;line-height:1.4}
+.bub.me{align-self:flex-end;background:var(--b600);color:#fff;border-bottom-right-radius:4px}
+.bub.them{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+.bub.sys{align-self:center;background:var(--b50);color:var(--b800);font-size:12px;font-weight:600;border-radius:10px}
+.composer{display:flex;gap:8px;padding:10px;background:#fff;border-top:1px solid var(--line)}
+.composer input{flex:1;border:1px solid var(--line);border-radius:999px;padding:10px 14px;outline:none}
+
+/* map */
+.mapwrap{position:relative;overflow:hidden;background:#eef2f7;touch-action:none;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.mapwrap svg{display:block;width:100%;touch-action:none;cursor:grab}
+.mapctl{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px}
+.mapctl button{width:36px;height:36px;border-radius:8px;background:#fff;box-shadow:0 2px 8px rgba(10,34,87,.2);font-size:18px;font-weight:700;color:var(--b800)}
+.carousel{display:flex;gap:10px;overflow-x:auto;padding:10px 12px 14px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.carousel::-webkit-scrollbar{display:none}
+.mini{flex:none;width:280px;display:flex;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;text-align:left;scroll-snap-align:center}
+.mini.sel{border-color:var(--b600);box-shadow:0 0 0 2px var(--b200)}
+.mini .th{width:84px;height:72px;border-radius:8px;overflow:hidden;flex:none}.mini .th svg{width:100%;height:100%}
+
+/* profile */
+.me-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.me-card h4{margin:0 0 4px;font-size:15.5px}
+.me-card .sub{font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.4}
+.swatches{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.swatch{width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.swatch.on{box-shadow:0 0 0 2.5px var(--b600)}
+.hairs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+.hairs button{border:2px solid var(--line);border-radius:12px;padding:3px;background:#fff;display:grid;place-items:center}
+.hairs button.on{border-color:var(--b600)}
+.toast{position:absolute;left:50%;top:66px;transform:translate(-50%,-20px);background:var(--b900);color:#fff;padding:10px 16px;border-radius:12px;font-size:13.5px;font-weight:600;opacity:0;transition:.3s;z-index:40;pointer-events:none;max-width:90%;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.match{position:absolute;inset:0;z-index:30;background:linear-gradient(160deg,rgba(29,78,216,.97),rgba(10,34,87,.98));color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:12px}
+.match.on{display:flex}
+.match h2{font-size:28px;margin:6px 0 0}.match p{margin:0;opacity:.9;max-width:320px;line-height:1.45}
+.match .preview{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:12px 14px;font-size:13.5px;max-width:330px;text-align:left}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div class="logo"><div class="mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11.5 12 4l9 7.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/><path d="M10.5 19v-5h3v5" fill="#fff"/></svg></div>First Lease</div>
+    <button class="me-btn" id="meBtn" aria-label="My profile"></button>
+  </header>
+  <main id="main"></main>
+  <nav class="bottom" id="nav"></nav>
+  <div class="fshade" id="fshade"></div>
+  <div class="fpanel" id="fpanel"><div class="fp-body" id="fpBody"></div><div class="fp-foot"><button class="btn ghost sm" id="fpReset" style="flex:1">Reset</button><button class="btn sm" id="fpDone" style="flex:2"></button></div></div>
+  <div class="backdrop" id="backdrop"></div>
+  <div class="sheet" id="sheet"><div class="grab"></div><button class="close" id="sheetClose" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div class="body" id="sheetBody"></div></div>
+  <div class="match" id="match"></div>
+  <div class="toast" id="toast"></div>
+</div>
+<script>
+/* ============ GEO ============ */
+const GEO={w:-71.19,n:42.42,sc:5000,cl:Math.cos(42.36*Math.PI/180)};
+const proj=(lat,lng)=>[(lng-GEO.w)*GEO.sc*GEO.cl,(GEO.n-lat)*GEO.sc];
+const SCHOOLS={bu:{name:'Boston University',short:'BU',lat:42.3505,lng:-71.1054},neu:{name:'Northeastern University',short:'Northeastern',lat:42.3398,lng:-71.0892},harvard:{name:'Harvard University',short:'Harvard',lat:42.3770,lng:-71.1167},mit:{name:'MIT',short:'MIT',lat:42.3601,lng:-71.0942},bc:{name:'Boston College',short:'BC',lat:42.3355,lng:-71.1685},emerson:{name:'Emerson College',short:'Emerson',lat:42.3522,lng:-71.0656},suffolk:{name:'Suffolk University',short:'Suffolk',lat:42.3588,lng:-71.0614},berklee:{name:'Berklee College of Music',short:'Berklee',lat:42.3466,lng:-71.0870},tufts:{name:'Tufts University',short:'Tufts',lat:42.4075,lng:-71.1190},umb:{name:'UMass Boston',short:'UMass Boston',lat:42.3135,lng:-71.0386},wit:{name:'Wentworth Inst. of Technology',short:'Wentworth',lat:42.3364,lng:-71.0950}};
+const HOODS=[['Allston',42.3545,-71.1325],['Brighton',42.3480,-71.1560],['Fenway',42.3445,-71.1000],['Back Bay',42.3500,-71.0810],['Beacon Hill',42.3590,-71.0690],['North End',42.3650,-71.0545],['South End',42.3395,-71.0740],['Jamaica Plain',42.3100,-71.1150],['Mission Hill',42.3325,-71.1040],['Cambridge',42.3740,-71.1050],['Somerville',42.3900,-71.0990],['Brookline',42.3330,-71.1260],['Seaport',42.3470,-71.0410],['Downtown',42.3555,-71.0600],['Charlestown',42.3790,-71.0620],['Roxbury',42.3235,-71.0870],['East Boston',42.3740,-71.0280],['South Boston',42.3330,-71.0480],['Dorchester',42.3050,-71.0640]];
+
+/* ============ PEOPLE ============ */
+const SK=['#fde0c8','#f1c27d','#e0ac69','#c68642','#8d5524','#5c3a1e'],HC=['#1b1b1b','#3b2416','#6b4423','#b5651d','#d6b370','#9ca3af'];
+const SH=['#2563eb','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#334155','#ec4899'],BG=['#dbeafe','#e0f2fe','#dcfce7','#fef3c7','#fee2e2','#ede9fe','#e2e8f0','#fce7f3'];
+const HAIRS=['short','buzz','curly','long','wavy','bun','ponytail','afro','hijab','bald'];
+const INTERESTS=['Cooking','Running','Photography','Gaming','Music','Hiking','Film','Coding','Art','Sports','Reading','Nightlife','Yoga','Travel','Baking','Board games'];
+const P={
+ jordan:{name:'Jordan',age:22,pr:'he/him',g:'m',school:'neu',prog:'Senior · Economics',role:'student',sit:'has',listing:2,spots:1,group:1,budget:[1100,1200],moveIn:'Jan 2027',sleep:'early',clean:2,social:'social',guests:'Often',smoke:false,pets:true,av:{s:SK[1],h:'short',hc:HC[2],sh:SH[0],bg:BG[0]},bio:'Our 4th housemate is studying abroad in the spring. Furnished room, cat included. We do house dinners on Thursdays.',prompts:[['House vibe','Friendly, busy, everyone does their own thing'],['We need someone who','Is cool with a very loud cat']],tags:['Sports','Cooking','Gaming']},
+ priya:{name:'Priya',age:25,pr:'she/her',g:'f',school:'mit',prog:'PhD · Biology',role:'student',sit:'has',listing:6,spots:1,group:1,budget:[1400,1500],moveIn:'Jan 2027',sleep:'early',clean:3,social:'quiet',guests:'Rarely',smoke:false,pets:false,av:{s:SK[3],h:'long',hc:HC[0],sh:SH[5],bg:BG[5]},bio:'Sam and I are both grad students. Quiet weeknights, sometimes we cook together.',prompts:[['House rule','Quiet after 10pm on weekdays'],['Green flag','You label your leftovers']],tags:['Running','Cooking','Reading']},
+ leo:{name:'Leo',age:22,pr:'he/him',g:'m',school:'tufts',prog:'Senior · Graphic Design',role:'student',sit:'has',listing:9,spots:2,group:1,budget:[1250,1250],moveIn:'Sep 2027',sleep:'night',clean:2,social:'balanced',guests:'Sometimes',smoke:false,pets:true,av:{s:SK[0],h:'wavy',hc:HC[4],sh:SH[2],bg:BG[2],g:true},bio:'Me + my friend Ana + her dog Mochi. Big yard, we grill all summer. Need 2 more people for a new lease in September.',prompts:[['House vibe','Creative, relaxed, plants everywhere'],['Must love','Mochi the dog']],tags:['Art','Photography','Cooking']},
+ sofia:{name:'Sofia',age:21,pr:'she/her',g:'f',school:'berklee',prog:'Junior · Music Production',role:'student',sit:'has',listing:11,spots:1,group:1,budget:[1700,1700],moveIn:'Jan 2027',sleep:'night',clean:2,social:'social',guests:'Sometimes',smoke:false,pets:false,av:{s:SK[2],h:'curly',hc:HC[1],sh:SH[7],bg:BG[7]},bio:'My roommate graduated early so I need someone for her room in January. Super walkable to Newbury and Berklee.',prompts:[['My ideal Sunday','Brunch on Newbury, then studio time'],['Dealbreaker','Loud alarms at 6am']],tags:['Music','Nightlife','Travel']},
+ tyler:{name:'Tyler',age:21,pr:'he/him',g:'m',school:'bu',prog:'Junior · Business',role:'student',sit:'has',listing:13,spots:2,group:1,budget:[1050,1050],moveIn:'Sep 2027',sleep:'night',clean:1,social:'social',guests:'Often',smoke:false,pets:true,av:{s:SK[1],h:'buzz',hc:HC[1],sh:SH[3],bg:BG[3],b:true},bio:'5BR in Allston, three of us are staying. Big common room, close to the B line. Social, but we respect exam weeks.',prompts:[['House vibe','Game days and pizza'],['Looking for','2 chill people, any major']],tags:['Sports','Gaming','Nightlife']},
+ aisha:{name:'Aisha',age:21,pr:'she/her',g:'f',school:'bu',prog:'Junior · Computer Science',role:'student',sit:'together',group:1,budget:[1000,1400],moveIn:'Sep 2027',sleep:'night',clean:3,social:'balanced',guests:'Sometimes',smoke:false,pets:true,av:{s:SK[4],h:'afro',hc:HC[0],sh:SH[1],bg:BG[1]},bio:'CS junior who codes at night and makes pancakes on Sundays. Want to form a group of 3 and find a place near BU or Brookline.',prompts:[['My ideal Sunday','Farmers market → long nap → group dinner'],['Dealbreaker','Dishes left overnight']],tags:['Coding','Baking','Music','Running']},
+ noor:{name:'Noor',age:23,pr:'she/her',g:'f',school:'neu',prog:'MS · Data Science',role:'student',sit:'together',group:1,budget:[900,1300],moveIn:'Sep 2027',sleep:'early',clean:3,social:'quiet',guests:'Rarely',smoke:false,pets:false,av:{s:SK[2],h:'hijab',hc:'#1e3a8a',sh:SH[6],bg:BG[0]},bio:'New to Boston this fall. Would love a roommate to apartment-hunt with near Northeastern.',prompts:[['Fun fact','I make the best maqluba you will ever have'],['Looking for','Quiet, respectful, near the Green Line']],tags:['Coding','Hiking','Cooking']},
+ diego:{name:'Diego',age:24,pr:'he/him',g:'m',school:'neu',prog:'MEng · Civil Engineering',role:'student',sit:'room',group:1,budget:[900,1250],moveIn:'Sep 2027',sleep:'night',clean:2,social:'social',guests:'Often',smoke:false,pets:true,av:{s:SK[3],h:'short',hc:HC[0],sh:SH[4],bg:BG[4],b:true},bio:'I cook a lot and share. Board game collection is out of control. Looking for one room in a friendly house.',prompts:[['My ideal Sunday','Soccer, then cooking for whoever is around'],['Dealbreaker','Passive-aggressive notes']],tags:['Cooking','Board games','Sports']},
+ mei:{name:'Mei & Hana',age:19,pr:'she/her',g:'f',school:'bu',prog:'Sophomores · Biology & Econ',role:'student',sit:'room',group:2,budget:[1000,1300],moveIn:'Sep 2027',sleep:'early',clean:3,social:'balanced',guests:'Sometimes',smoke:false,pets:false,av:{s:SK[0],h:'bun',hc:HC[0],sh:SH[1],bg:BG[1]},bio:'Two best friends looking for 2 rooms together in an existing apartment. Very tidy, early risers.',prompts:[['We\'re looking for','2 open rooms in the same place'],['Green flag','A shared cleaning schedule']],tags:['Baking','Photography','Travel']},
+ kwame:{name:'Kwame',age:26,pr:'he/him',g:'m',school:'suffolk',prog:'JD · Law',role:'student',sit:'room',group:1,budget:[1200,1700],moveIn:'Jan 2027',sleep:'early',clean:3,social:'quiet',guests:'Rarely',smoke:false,pets:false,av:{s:SK[5],h:'buzz',hc:HC[0],sh:SH[6],bg:BG[6],g:true},bio:'Law student, mostly in the library. Looking for a quiet room near downtown or Back Bay.',prompts:[['Typical weeknight','Reading cases with tea'],['Looking for','A calm, clean home']],tags:['Reading','Music','Running']},
+ alex:{name:'Alex',age:20,pr:'they/them',g:'nb',school:'emerson',prog:'Sophomore · Film',role:'student',sit:'together',group:1,budget:[1000,1500],moveIn:'Jun 2027',sleep:'night',clean:2,social:'social',guests:'Often',smoke:false,pets:true,av:{s:SK[1],h:'ponytail',hc:HC[3],sh:SH[3],bg:BG[3]},bio:'Film kid looking for creative people to find a place with — JP, South End, or anywhere on the Orange Line.',prompts:[['Movie night pick','Anything by Agnès Varda'],['Dealbreaker','No natural light']],tags:['Film','Photography','Art']},
+ maya:{name:'Maya Chen',role:'broker',org:'Harbor Realty',av:{s:SK[1],h:'long',hc:HC[0],sh:SH[6],bg:BG[0]},bio:'Licensed broker covering Allston, Brighton and Brookline.'},
+ dana:{name:'Dana Brooks',role:'manager',org:'Fenway Lofts',av:{s:SK[2],h:'bun',hc:HC[2],sh:SH[0],bg:BG[1]},bio:'Leasing manager at Fenway Lofts.'},
+ tom:{name:'Tom Reyes',role:'broker',org:'Keystone Brokers',av:{s:SK[3],h:'short',hc:HC[0],sh:SH[6],bg:BG[6],b:true},bio:'Jamaica Plain whole-house rentals.'},
+ alvarez:{name:'Rafael Alvarez',role:'landlord',org:'Owner',av:{s:SK[2],h:'bald',hc:HC[5],sh:SH[2],bg:BG[2],g:true,b:true},bio:'I own a two-family in Brighton and live upstairs.'},
+ chris:{name:'Chris Lin',role:'manager',org:'The Current',av:{s:SK[0],h:'short',hc:HC[0],sh:SH[0],bg:BG[0]},bio:'Leasing team at The Current in the Seaport.'},
+ gail:{name:'Gail Morris',role:'landlord',org:'Owner',av:{s:SK[0],h:'wavy',hc:HC[5],sh:SH[4],bg:BG[4],g:true},bio:'I rent the apartment above my family\'s café.'},
+ okafor:{name:'Emeka Okafor',role:'landlord',org:'Owner',av:{s:SK[5],h:'short',hc:HC[0],sh:SH[1],bg:BG[1],b:true},bio:'South End brownstone owner.'},
+ nina:{name:'Nina Park',role:'broker',org:'Coolidge Realty',av:{s:SK[1],h:'ponytail',hc:HC[0],sh:SH[5],bg:BG[5]},bio:'Brookline & Coolidge Corner rentals.'},
+ ellen:{name:'Ellen Walsh',role:'manager',org:'Hill Properties',av:{s:SK[0],h:'bun',hc:HC[4],sh:SH[6],bg:BG[6]},bio:'Property manager on Beacon Hill.'},
+};
+Object.keys(P).forEach(k=>P[k].id=k);
+const ROLE={broker:'Broker',manager:'Property manager',landlord:'Landlord',student:'Current tenant'};
+
+/* ============ LISTINGS ============ */
+const L=(o)=>o;
+const LISTINGS=[
+ {id:1,title:'3 bd apartment',type:'apartment',hood:'Allston',address:'Gardner St, Allston, MA',lat:42.3535,lng:-71.1300,price:4050,beds:3,baths:1,sqft:1050,moveIn:'Sep 2027',lister:'maya',laundry:'Shared in building',parking:false,pets:false,heat:'Radiator (included)',cool:'Window units',furn:false,util:'Heat & hot water included',lease:'12 months',colors:['#60a5fa','#1e40af'],desc:'Sunny three-bedroom on a quiet side street off Brighton Ave. Hardwood floors, updated kitchen with dishwasher, bike storage in the basement. 8 minutes to the B line.'},
+ {id:2,spots:1,title:'Private room in 4 bd house',type:'room',hood:'Mission Hill',address:'Tremont St, Mission Hill, MA',lat:42.3330,lng:-71.1050,price:1150,beds:4,baths:2,sqft:1600,moveIn:'Jan 2027',lister:'jordan',laundry:'In-unit',parking:true,pets:true,heat:'Gas forced air',cool:'Central AC',furn:true,util:'~$70/mo split',lease:'Through Aug 2027',colors:['#93c5fd','#2563eb'],desc:'Furnished room in a 4-bedroom house with a backyard and driveway parking. Three friendly housemates and a cat. Near Longwood and the E line.'},
+ {id:3,title:'Studio',type:'apartment',hood:'Fenway',address:'Peterborough St, Fenway, MA',lat:42.3440,lng:-71.0990,price:2350,beds:0,baths:1,sqft:480,moveIn:'Feb 2027',lister:'dana',laundry:'In-unit',parking:false,pets:true,heat:'Heat pump',cool:'Central AC',furn:false,util:'Tenant pays electric',lease:'12 months',colors:['#bfdbfe','#1d4ed8'],desc:'Renovated studio at Fenway Lofts with in-unit laundry, gym, package lockers and a roof deck. 5 minutes to Kenmore.'},
+ {id:4,title:'5 bd house',type:'house',hood:'Jamaica Plain',address:'Centre St, Jamaica Plain, MA',lat:42.3110,lng:-71.1130,price:5600,beds:5,baths:2,sqft:2300,moveIn:'Sep 2027',lister:'tom',laundry:'None',parking:true,pets:false,heat:'Oil boiler',cool:'None',furn:false,util:'Tenant pays all',lease:'12 months',colors:['#a5b4fc','#3730a3'],desc:'Victorian single-family with a big porch, two living rooms and a yard. Walk to Jamaica Pond and the Orange Line.'},
+ {id:5,title:'2 bd apartment',type:'apartment',hood:'Brighton',address:'Chestnut Hill Ave, Brighton, MA',lat:42.3470,lng:-71.1530,price:2900,beds:2,baths:1,sqft:900,moveIn:'Jul 2027',lister:'alvarez',laundry:'Shared in building',parking:true,pets:true,heat:'Gas',cool:'Mini-split',furn:false,util:'Water included',lease:'12 months',colors:['#7dd3fc','#0369a1'],desc:'Garden-level 2-bedroom in an owner-occupied two-family. Private patio, one parking spot, pets welcome.'},
+ {id:6,spots:1,title:'Private room in 3 bd apartment',type:'room',hood:'Cambridge',address:'Magazine St, Cambridge, MA',lat:42.3600,lng:-71.1040,price:1450,beds:3,baths:1.5,sqft:1200,moveIn:'Jan 2027',lister:'priya',laundry:'In-unit',parking:false,pets:false,heat:'Radiator',cool:'Window unit',furn:false,util:'~$55/mo each',lease:'Through Aug 2027',colors:['#c7d2fe','#4338ca'],desc:'Bright corner room in a quiet Cambridgeport apartment shared with two grad students. Big kitchen, walk to MIT and the river.'},
+ {id:7,title:'2 bd apartment',type:'apartment',hood:'Seaport',address:'Seaport Blvd, Boston, MA',lat:42.3480,lng:-71.0440,price:5200,beds:2,baths:2,sqft:1000,moveIn:'Sep 2027',lister:'chris',laundry:'In-unit',parking:true,pets:true,heat:'Central',cool:'Central AC',furn:true,util:'Internet included',lease:'12 months',colors:['#38bdf8','#1e3a8a'],desc:'Furnished luxury 2 bed / 2 bath at The Current with harbor views, pool, gym, study rooms and concierge.'},
+ {id:8,title:'1 bd apartment',type:'apartment',hood:'North End',address:'Hanover St, Boston, MA',lat:42.3640,lng:-71.0545,price:2650,beds:1,baths:1,sqft:560,moveIn:'Jan 2027',lister:'gail',laundry:'None',parking:false,pets:false,heat:'Included',cool:'None',furn:false,util:'Heat included',lease:'12 months',colors:['#93c5fd','#1e40af'],desc:'Cozy one-bedroom above a café on Hanover St with a bay window. Steps from the Haymarket T.'},
+ {id:9,spots:2,title:'2 private rooms in 4 bd house',type:'room',hood:'Somerville',address:'Highland Ave, Somerville, MA',lat:42.3880,lng:-71.1000,price:1250,beds:4,baths:2,sqft:1800,moveIn:'Sep 2027',lister:'leo',laundry:'In-unit',parking:true,pets:true,heat:'Gas forced air',cool:'Central AC',furn:false,util:'~$80/mo each',lease:'12 months',colors:['#a5f3fc','#0e7490'],desc:'Two rooms open in a 4-bedroom house with a big yard, grill and two parking spots. Dog in the house. Near the Green Line extension.'},
+ {id:10,title:'2 bd apartment',type:'apartment',hood:'South End',address:'Columbus Ave, Boston, MA',lat:42.3410,lng:-71.0730,price:3600,beds:2,baths:1,sqft:950,moveIn:'Aug 2027',lister:'okafor',laundry:'Shared in building',parking:false,pets:false,heat:'Radiator',cool:'Window units',furn:false,util:'Tenant pays all',lease:'12 months',colors:['#bae6fd','#1e3a8a'],desc:'Brownstone 2-bedroom with bay windows and exposed brick. Walk to Back Bay station.'},
+ {id:11,spots:1,title:'Private room in 2 bd apartment',type:'room',hood:'Back Bay',address:'Marlborough St, Boston, MA',lat:42.3490,lng:-71.0850,price:1700,beds:2,baths:1,sqft:850,moveIn:'Jan 2027',lister:'sofia',laundry:'Shared in building',parking:false,pets:false,heat:'Included',cool:'Window unit',furn:true,util:'Heat included',lease:'Through Aug 2027',colors:['#dbeafe','#2563eb'],desc:'Furnished room in a classic Back Bay brownstone. Tall windows, heat included, walk to Berklee and Newbury St.'},
+ {id:12,title:'3 bd apartment',type:'apartment',hood:'Brookline',address:'Beacon St, Brookline, MA',lat:42.3420,lng:-71.1210,price:4200,beds:3,baths:1.5,sqft:1150,moveIn:'Sep 2027',lister:'nina',laundry:'In-unit',parking:false,pets:false,heat:'Central',cool:'Central AC',furn:false,util:'Tenant pays all',lease:'12 months',colors:['#93c5fd','#1e3a8a'],desc:'Renovated 3-bedroom near Coolidge Corner with in-unit laundry and the C line at the door.'},
+ {id:13,spots:2,title:'2 private rooms in 5 bd house',type:'room',hood:'Allston',address:'Linden St, Allston, MA',lat:42.3560,lng:-71.1370,price:1050,beds:5,baths:2,sqft:2000,moveIn:'Sep 2027',lister:'tyler',laundry:'In-unit',parking:true,pets:true,heat:'Gas',cool:'None',furn:false,util:'~$60/mo each',lease:'12 months',colors:['#bfdbfe','#1e40af'],desc:'Two rooms open in a 5-bedroom house with a huge common room and porch. Three current tenants staying. Close to the B line.'},
+ {id:14,title:'Studio',type:'apartment',hood:'Beacon Hill',address:'Revere St, Boston, MA',lat:42.3585,lng:-71.0680,price:2500,beds:0,baths:1,sqft:420,moveIn:'Dec 2026',lister:'ellen',laundry:'Shared in building',parking:false,pets:false,heat:'Included',cool:'Window unit',furn:false,util:'Heat & hot water included',lease:'12 months',colors:['#c7d2fe','#3730a3'],desc:'Garden-level studio on a gas-lit Beacon Hill street. Heat and hot water included. Walk to Charles/MGH.'},
+];
+
+/* ============ STATE ============ */
+const S={view:'search',searchMode:'list',
+ me:{name:'Jamie',age:20,pr:'they/them',school:'bu',prog:'Sophomore · Undeclared',bio:'Easygoing, love cooking and long walks along the Charles. Looking for a clean, friendly place.',tags:['Cooking','Running','Photography','Music'],
+   av:{s:SK[1],h:'wavy',hc:HC[1],sh:SH[0],bg:BG[0]},photo:null,sit:'room',group:1,mv:{y:2027,m:8},maxBudget:1500,sleep:'night',clean:2,social:'balanced',guests:'Sometimes',smoke:false,pets:true},
+ f:{q:'',min:0,max:0,beds:0,types:['apartment','house','room'],mv:{any:true,y:2027,m:8,flex:1},pets:false,laundry:false,parking:false,furn:false,ac:false,sort:'new'},
+ rf:{sits:['has','together','room'],maxBudget:2000,genders:['f','m','nb'],mv:{any:true,y:2027,m:8,flex:2},sameSchool:false,sleep:'any',clean:1,pets:'any'},
+ saved:new Set(),rmLiked:new Set(),rmPassed:new Set(),hist:[],map:null,mapSel:null,drop:null,openConvo:null,nextId:200,
+ convos:[{id:'c1',person:'sofia',listing:11,unread:0,msgs:[{w:'sys',t:'You liked each other · Nov 10'},{w:'me',t:'Hi Sofia! Is your room on Marlborough St still available for January?'},{w:'them',t:'Hey! Yes 🙌 Want to FaceTime this week?'},{w:'me',t:'That would be great — Thursday evening?'}]}]};
+
+/* ============ HELPERS ============ */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const money=n=>'$'+Math.round(n).toLocaleString('en-US');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LST=id=>LISTINGS.find(l=>l.id===id);
+const school=()=>SCHOOLS[S.me.school];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],NOWI=2026*12+10,YEARS=[2026,2027,2028];
+const mIdx=s=>{const [m,y]=s.split(' ');return +y*12+MON.indexOf(m);};
+const mvLabel=mv=>MON[mv.m]+' '+mv.y;
+const mvOk=(s,mv)=>{if(mv.any)return true;const a=mIdx(s),t=mv.y*12+mv.m;return mv.flex<0?a<=t:Math.abs(a-t)<=mv.flex;};
+const mvShort=mv=>mv.any?'Move-in':'📅 '+MON[mv.m]+' '+String(mv.y).slice(2)+(mv.flex>0?' ±'+mv.flex:mv.flex<0?' or sooner':'');
+const availText=l=>{const i=mIdx(l.moveIn);return i<=NOWI?'Available now':'Available '+MON[i%12]+' 1, '+Math.floor(i/12);};
+const bedsTxt=l=>l.type==='room'?`<b>Private room</b> in ${l.beds} bd`:(l.beds?`<b>${l.beds}</b> bd`:'<b>Studio</b>');
+const perTxt=l=>l.type==='room'?'/mo per room':'/mo';
+const roomsAvail=l=>l.type==='room'?(l.spots>1?l.spots+' rooms available':'1 room available'):'';
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2300);}
+const getP=p=>p.split('.').reduce((o,k)=>o[k],S);
+function setP(p,v){const k=p.split('.'),l=k.pop();k.reduce((o,x)=>o[x],S)[l]=v;}
+
+let AVN=0;
+function avatar(a,size=48,photo){
+ if(photo)return `<img src="${photo}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;display:block">`;
+ const id='av'+(AVN++),h=a.hc,s=a.s,hij=a.h==='hijab';
+ const back={long:`<path d="M27 46C26 20 74 20 73 46L77 86C66 92 34 92 23 86Z" fill="${h}"/>`,wavy:`<path d="M28 44C26 22 74 22 72 44C74 56 76 66 72 74C66 70 34 70 28 74C24 66 26 56 28 44Z" fill="${h}"/>`,ponytail:`<path d="M66 34C80 36 82 60 74 74C72 62 70 50 66 44Z" fill="${h}"/>`,afro:`<circle cx="50" cy="38" r="31" fill="${h}"/>`}[a.h]||'';
+ const front={short:`<path d="M31 42C29 23 43 18 51 18C64 18 72 27 69 42C65 33 57 29 47 30C40 31 34 35 31 42Z" fill="${h}"/>`,buzz:`<path d="M31.5 40C32 24 68 24 68.5 40C62 31 38 31 31.5 40Z" fill="${h}" opacity=".85"/>`,
+  curly:[[33,35,8],[41,27,9],[51,23,9],[61,26,9],[68,35,8],[30,45,6],[70,45,6]].map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${h}"/>`).join(''),
+  long:`<path d="M30 47C28 24 42 19 50 19C62 19 72 25 70 47C67 34 59 28 50 28C41 28 33 34 30 47Z" fill="${h}"/>`,wavy:`<path d="M30 46C28 25 42 19 50 19C63 19 72 26 70 46C66 36 60 31 54 33C48 29 40 31 35 37C33 40 31 43 30 46Z" fill="${h}"/>`,
+  bun:`<circle cx="50" cy="17" r="9" fill="${h}"/><path d="M31 43C30 24 70 24 69 43C64 32 36 32 31 43Z" fill="${h}"/>`,ponytail:`<path d="M31 43C30 24 70 24 69 43C64 32 36 32 31 43Z" fill="${h}"/>`,afro:'',bald:'',hijab:''}[a.h];
+ return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display:block"><defs><clipPath id="${id}"><circle cx="50" cy="50" r="50"/></clipPath></defs><g clip-path="url(#${id})">
+  <rect width="100" height="100" fill="${a.bg}"/>${back}<path d="M15 104C17 80 34 72 50 72C66 72 83 80 85 104Z" fill="${a.sh}"/>
+  <path d="M43 60h14v13c-4 3-10 3-14 0Z" fill="${s}"/><path d="M43 62h14v5c-4 2-10 2-14 0Z" fill="#000" opacity=".08"/>
+  ${hij?`<path d="M23 54C21 20 79 20 77 54C77 72 66 82 50 82C34 82 23 72 23 54Z" fill="${h}"/><path d="M20 104C22 82 34 74 50 76C66 74 78 82 80 104Z" fill="${h}"/>`:`<circle cx="31" cy="47" r="4.5" fill="${s}"/><circle cx="69" cy="47" r="4.5" fill="${s}"/>`}
+  <ellipse cx="50" cy="${hij?48:45}" rx="${hij?16.5:19}" ry="${hij?18.5:21}" fill="${s}"/>${front}
+  ${a.b?`<path d="M32 47C33 64 42 67 50 67C58 67 67 64 68 47C64 57 57 60 50 60C43 60 36 57 32 47Z" fill="${h}" opacity=".92"/>`:''}
+  <path d="M40 41h6M54 41h6" stroke="#1f2937" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>
+  <circle cx="43" cy="${hij?48:46}" r="2.2" fill="#1f2937"/><circle cx="57" cy="${hij?48:46}" r="2.2" fill="#1f2937"/>
+  <circle cx="38" cy="53" r="3.5" fill="#f472b6" opacity=".18"/><circle cx="62" cy="53" r="3.5" fill="#f472b6" opacity=".18"/>
+  <path d="M44 ${hij?56:55}Q50 ${hij?61:60} 56 ${hij?56:55}" stroke="${a.b?'#fff':'#7c2d12'}" stroke-width="2" fill="none" stroke-linecap="round"/>
+  ${a.g?`<g stroke="#1f2937" stroke-width="1.6" fill="none"><circle cx="43" cy="46" r="5.5"/><circle cx="57" cy="46" r="5.5"/><path d="M48.5 46h3"/></g>`:''}</g></svg>`;
+}
+const meAv=s=>avatar(S.me.av,s,S.me.photo);
+function art(l){
+ const [c1,c2]=l.colors,id='g'+(AVN++);let b='';
+ if(l.type==='house'||(l.type==='room'&&l.beds>=4)){b=`<rect x="90" y="140" width="220" height="150" fill="#fff" opacity=".95" rx="4"/><path d="M75 148 200 60 325 148Z" fill="#0b2a5b" opacity=".85"/><rect x="180" y="215" width="40" height="75" rx="3" fill="${c2}"/>${[110,250].map(x=>`<rect x="${x}" y="170" width="40" height="34" rx="3" fill="${c1}"/><rect x="${x}" y="230" width="40" height="34" rx="3" fill="${c1}"/>`).join('')}<circle cx="200" cy="115" r="13" fill="${c1}"/><ellipse cx="60" cy="282" rx="34" ry="26" fill="#22c55e" opacity=".6"/><ellipse cx="345" cy="285" rx="30" ry="22" fill="#22c55e" opacity=".6"/>`;}
+ else if(l.type==='room'){b=`<rect x="70" y="80" width="260" height="210" fill="#fff" opacity=".95" rx="8"/><rect x="215" y="105" width="90" height="70" rx="4" fill="${c1}"/><path d="M260 105v70M215 140h90" stroke="#fff" stroke-width="3"/><rect x="95" y="210" width="150" height="45" rx="8" fill="${c2}"/><rect x="95" y="190" width="55" height="30" rx="8" fill="${c1}"/><rect x="270" y="215" width="40" height="40" rx="4" fill="#0b2a5b" opacity=".7"/><circle cx="120" cy="125" r="18" fill="#fbbf24" opacity=".85"/>`;}
+ else{const fl=l.beds>=3?5:4,x0=115;let w='';for(let f=0;f<fl;f++)for(let c=0;c<4;c++)w+=`<rect x="${x0+14+c*39}" y="${78+f*40}" width="26" height="26" rx="3" fill="${(f+c+l.id)%3?c1:'#fde68a'}"/>`;b=`<rect x="${x0}" y="60" width="170" height="${fl*40+30}" fill="#fff" opacity=".95" rx="4"/>${w}<rect x="${x0-60}" y="150" width="55" height="140" fill="#fff" opacity=".55" rx="3"/><rect x="${x0+176}" y="120" width="60" height="170" fill="#fff" opacity=".55" rx="3"/>`;}
+ return `<svg class="art" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="400" height="300" fill="url(#${id})"/><circle cx="340" cy="50" r="26" fill="#fff" opacity=".35"/>${b}<rect y="288" width="400" height="12" fill="#0b2a5b" opacity=".25"/></svg>`;
+}
+const heartSvg=on=>`<svg viewBox="0 0 24 24"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11Z" fill="${on?'#ef4444':'none'}" stroke="${on?'#ef4444':'#334155'}" stroke-width="2"/></svg>`;
+
+/* ============ COMMON GROUND (replaces match %) ============ */
+function common(p){
+ const m=S.me,out=[];
+ if(p.school===m.school)out.push('🎓 Both at '+SCHOOLS[m.school].short);
+ if(p.moveIn===mvLabel(m.mv))out.push('📅 Both moving '+p.moveIn);
+ if(p.sleep===m.sleep)out.push(m.sleep==='night'?'🌙 Night owls':'☀️ Early birds');
+ if(p.clean===m.clean)out.push('🧽 '+['','Relaxed about cleaning','Tidy','Very tidy'][m.clean]);
+ if(p.social===m.social)out.push({quiet:'🤫 Like a quiet home',balanced:'⚖️ Like a balanced home',social:'🎉 Like a social home'}[m.social]);
+ if(p.guests===m.guests)out.push('👋 Guests '+m.guests.toLowerCase());
+ if(p.pets&&m.pets)out.push('🐾 Pet lovers');else if(!p.pets&&!m.pets)out.push('🚫 No pets');
+ if(!p.smoke&&!m.smoke)out.push('🚭 Non-smokers');
+ if(p.budget[0]<=m.maxBudget&&p.budget[1]>=Math.min(m.maxBudget,900))out.push('💰 Similar budget');
+ (p.tags||[]).filter(t=>m.tags.includes(t)).forEach(t=>out.push('❤️ '+t));
+ return out;
+}
+const sitText=p=>p.sit==='has'?`Has a place, needs ${p.spots} roommate${p.spots>1?'s':''}`:p.sit==='together'?'Looking for roommates to find a place with':(p.group>1?`${p.group} friends looking for ${p.group} rooms`:'Looking for a room to rent');
+const sitLabel=p=>({has:'🏠 ',together:'🔎 ',room:'🛏️ '}[p.sit])+sitText(p);
+
+/* ============ FILTERS ============ */
+function homeOk(l){const f=S.f,q=f.q.toLowerCase();
+ if(q&&!(l.address+l.hood+l.title).toLowerCase().includes(q))return false;
+ if(f.min&&l.price<f.min)return false;if(f.max&&l.price>f.max)return false;
+ if(f.beds&&l.type!=='room'&&l.beds<f.beds)return false;
+ if(!f.types.includes(l.type))return false;if(!mvOk(l.moveIn,f.mv))return false;
+ if(f.pets&&!l.pets)return false;if(f.laundry&&l.laundry!=='In-unit')return false;if(f.parking&&!l.parking)return false;if(f.furn&&!l.furn)return false;if(f.ac&&!/AC|split|Central/.test(l.cool))return false;
+ return true;}
+function homes(){const so={new:(a,b)=>b.id-a.id,low:(a,b)=>a.price-b.price,high:(a,b)=>b.price-a.price};return LISTINGS.filter(homeOk).sort(so[S.f.sort]);}
+function rmOk(p,ign){const rf=S.rf,m=S.me;
+ if(p.role!=='student'||p.hidden)return false;if(!ign&&(S.rmLiked.has(p.id)||S.rmPassed.has(p.id)))return false;
+ if(!rf.sits.includes(p.sit))return false;if(p.sit==='has'&&p.spots<m.group)return false;
+ if(p.budget[0]>rf.maxBudget)return false;if(!rf.genders.includes(p.g))return false;if(!mvOk(p.moveIn,rf.mv))return false;
+ if(rf.sameSchool&&p.school!==m.school)return false;if(rf.sleep!=='any'&&p.sleep!==rf.sleep)return false;if(p.clean<rf.clean)return false;
+ if(rf.pets==='with'&&!p.pets)return false;if(rf.pets==='without'&&p.pets)return false;return true;}
+const people=ign=>Object.values(P).filter(p=>rmOk(p,ign));
+
+const caret='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m6 9 6 6 6-6"/></svg>';
+const opt=(p,v,t)=>`<button class="opt ${JSON.stringify(getP(p))===JSON.stringify(v)?'on':''}" data-p="${p}" data-v='${JSON.stringify(v)}'>${t}</button>`;
+const mopt=(p,v,t)=>`<button class="opt ${getP(p).includes(v)?'on':''}" data-p="${p}" data-mv='${JSON.stringify(v)}'>${t}</button>`;
+const chk=(p,t)=>`<button class="chk ${getP(p)?'on':''}" data-p="${p}" data-b="1"><span>${t}</span><span class="sw"></span></button>`;
+function mvPicker(base,withAny){const mv=getP(base),off=withAny&&mv.any;
+ return `${withAny?chk(base+'.any','Any move-in date'):''}<div style="${off?'opacity:.4;pointer-events:none':''}"><div class="fp-h" style="margin-top:8px">Year</div><div class="opts">${YEARS.map(y=>opt(base+'.y',y,y)).join('')}</div>
+ <div class="fp-h">Month</div><div class="opts" style="display:grid;grid-template-columns:repeat(4,1fr)">${MON.map((n,i)=>`<button class="opt ${mv.m===i?'on':''}" ${mv.y*12+i<NOWI?'disabled':''} data-p="${base}.m" data-v="${i}">${n}</button>`).join('')}</div>
+ ${withAny?`<div class="fp-h">Flexibility</div><div class="opts">${opt(base+'.flex',0,'Exact')}${opt(base+'.flex',1,'± 1 month')}${opt(base+'.flex',2,'± 2 months')}${opt(base+'.flex',-1,'Or sooner')}</div>`:''}</div>`;}
+const PRICES=[0,1000,1500,2000,2500,3000,4000,5000,6000];
+const HOME_DROPS={
+ price:{lbl:()=>S.f.min||S.f.max?`${S.f.min?money(S.f.min):'$0'} – ${S.f.max?money(S.f.max):'Any'}`:'Price',act:()=>S.f.min||S.f.max,
+  body:()=>`<div class="fp-h">Monthly rent</div><div class="two"><div class="field"><label>Minimum</label><select class="sel" data-sel="f.min">${PRICES.map(v=>`<option value="${v}" ${S.f.min===v?'selected':''}>${v?money(v):'No min'}</option>`).join('')}</select></div><div class="field"><label>Maximum</label><select class="sel" data-sel="f.max">${PRICES.map(v=>`<option value="${v}" ${S.f.max===v?'selected':''}>${v?money(v):'No max'}</option>`).join('')}</select></div></div>`,reset:()=>{S.f.min=0;S.f.max=0;}},
+ beds:{lbl:()=>S.f.beds?S.f.beds+'+ bd':'Beds',act:()=>S.f.beds,body:()=>`<div class="fp-h">Bedrooms</div><div class="opts">${[0,1,2,3,4,5].map(n=>opt('f.beds',n,n?n+'+':'Any')).join('')}</div>`,reset:()=>S.f.beds=0},
+ type:{lbl:()=>S.f.types.length===3?'Home type':S.f.types.map(t=>({apartment:'Apartments',house:'Houses',room:'Rooms'}[t])).join(', '),act:()=>S.f.types.length<3,
+  body:()=>`<div class="fp-h">Home type</div><div class="opts">${mopt('f.types','apartment','Apartments')}${mopt('f.types','house','Houses')}${mopt('f.types','room','Rooms for rent')}</div>`,reset:()=>S.f.types=['apartment','house','room']},
+ move:{lbl:()=>mvShort(S.f.mv),act:()=>!S.f.mv.any,body:()=>`<div class="fp-h">Move-in date</div>${mvPicker('f.mv',true)}`,reset:()=>S.f.mv={any:true,y:2027,m:8,flex:1}},
+ more:{lbl:()=>{const n=['pets','laundry','parking','furn','ac'].filter(k=>S.f[k]).length;return 'More'+(n?' ('+n+')':'');},act:()=>['pets','laundry','parking','furn','ac'].some(k=>S.f[k]),
+  body:()=>`<div class="fp-h">Must-haves</div>${chk('f.pets','Pets allowed')}${chk('f.laundry','In-unit laundry')}${chk('f.parking','Parking')}${chk('f.ac','Air conditioning')}${chk('f.furn','Furnished')}`,reset:()=>['pets','laundry','parking','furn','ac'].forEach(k=>S.f[k]=false)},
+};
+const RM_DROPS={
+ sit:{lbl:()=>S.rf.sits.length===3?'Looking for':S.rf.sits.map(s=>({has:'Has a place',together:'Searching together',room:'Wants a room'}[s])).join(', '),act:()=>S.rf.sits.length<3,
+  body:()=>`<div class="fp-h">Show people who…</div><div class="opts" style="display:grid">${mopt('rf.sits','has','🏠 Have a place and need roommates')}${mopt('rf.sits','together','🔎 Want roommates to find a place with')}${mopt('rf.sits','room','🛏️ Are looking for a room to rent')}</div><div class="fp-h">Who's moving?</div><div class="opts">${[1,2,3].map(n=>opt('me.group',n,['','Just me','Me + 1 friend','Me + 2 friends'][n])).join('')}</div>`,reset:()=>S.rf.sits=['has','together','room']},
+ budget:{lbl:()=>S.rf.maxBudget<2000?'≤ '+money(S.rf.maxBudget):'Budget',act:()=>S.rf.maxBudget<2000,body:()=>`<div class="fp-h">Their budget starts at most</div><div class="range-row"><span></span><span data-out="rf.maxBudget">${money(S.rf.maxBudget)}</span></div><input type="range" min="800" max="2000" step="50" value="${S.rf.maxBudget}" data-rp="rf.maxBudget">`,reset:()=>S.rf.maxBudget=2000},
+ gender:{lbl:()=>S.rf.genders.length===3?'Gender':S.rf.genders.map(g=>({f:'Women',m:'Men',nb:'Non-binary'}[g])).join(', '),act:()=>S.rf.genders.length<3,body:()=>`<div class="fp-h">Show me</div><div class="opts">${mopt('rf.genders','f','Women')}${mopt('rf.genders','m','Men')}${mopt('rf.genders','nb','Non-binary')}</div>`,reset:()=>S.rf.genders=['f','m','nb']},
+ move:{lbl:()=>mvShort(S.rf.mv),act:()=>!S.rf.mv.any,body:()=>`<div class="fp-h">Their move-in</div>${mvPicker('rf.mv',true)}`,reset:()=>S.rf.mv={any:true,y:2027,m:8,flex:2}},
+ life:{lbl:()=>'Lifestyle',act:()=>S.rf.sleep!=='any'||S.rf.clean>1||S.rf.pets!=='any'||S.rf.sameSchool,
+  body:()=>`<div class="fp-h">Schedule</div><div class="opts">${opt('rf.sleep','any','Any')}${opt('rf.sleep','early','☀️ Early birds')}${opt('rf.sleep','night','🌙 Night owls')}</div><div class="fp-h">Cleanliness at least</div><div class="opts">${opt('rf.clean',1,'Relaxed')}${opt('rf.clean',2,'Tidy')}${opt('rf.clean',3,'Very tidy')}</div><div class="fp-h">Pets</div><div class="opts">${opt('rf.pets','any','Any')}${opt('rf.pets','with','Pet lovers')}${opt('rf.pets','without','No pets')}</div>${chk('rf.sameSchool','Only students from '+school().short)}`,reset:()=>Object.assign(S.rf,{sleep:'any',clean:1,pets:'any',sameSchool:false})},
+};
+function fbar(set){const D=set==='rm'?RM_DROPS:HOME_DROPS;return `<div class="fbar">${Object.entries(D).map(([k,d])=>`<button class="fbtn ${d.act()?'active':''}" data-drop="${k}" data-set="${set}">${d.lbl()} ${caret}</button>`).join('')}</div>`;}
+function bindFbar(){$$('[data-drop]').forEach(b=>b.onclick=()=>openDrop(b.dataset.set,b.dataset.drop,b));}
+function openDrop(set,k,btn){if(S.drop&&S.drop.k===k&&S.drop.set===set)return closeDrop();S.drop={set,k};const r=btn.closest('.fbar').getBoundingClientRect(),ar=$('#app').getBoundingClientRect();$('#fpanel').style.top=(r.bottom-ar.top+6)+'px';drawDrop();$('#fpanel').classList.add('on');$('#fshade').classList.add('on');$$('[data-drop]').forEach(x=>x.classList.toggle('open',x===btn));}
+function cnt(){const {set}=S.drop,n=set==='rm'?people(true).length:homes().length;$('#fpDone').textContent=`See ${n} ${set==='rm'?(n===1?'person':'people'):(n===1?'home':'homes')}`;}
+function drawDrop(){const D=(S.drop.set==='rm'?RM_DROPS:HOME_DROPS)[S.drop.k],b=$('#fpBody'),st=b.scrollTop;b.innerHTML=D.body();b.scrollTop=st;cnt();
+ $$('#fpBody [data-sel]').forEach(s=>s.onchange=()=>{setP(s.dataset.sel,+s.value);cnt();});}
+function closeDrop(){if(!S.drop)return;S.drop=null;$('#fpanel').classList.remove('on');$('#fshade').classList.remove('on');render(true);}
+function closeDropSilent(){S.drop=null;$('#fpanel').classList.remove('on');$('#fshade').classList.remove('on');}
+$('#fshade').onclick=closeDrop;$('#fpDone').onclick=closeDrop;
+$('#fpReset').onclick=()=>{(S.drop.set==='rm'?RM_DROPS:HOME_DROPS)[S.drop.k].reset();drawDrop();};
+function handleOpt(e,after){const b=e.target.closest('[data-p]');if(!b||b.disabled)return false;const p=b.dataset.p;
+ if(b.dataset.b)setP(p,!getP(p));else if(b.dataset.mv){const v=JSON.parse(b.dataset.mv),a=getP(p);setP(p,a.includes(v)?(a.length>1||p==='me.tags'?a.filter(x=>x!==v):a):[...a,v]);}else setP(p,JSON.parse(b.dataset.v));
+ if(p.endsWith('.y')){const mv=getP(p.slice(0,-2));if(mv.y*12+mv.m<NOWI)mv.m=NOWI%12;}after();return true;}
+$('#fpBody').addEventListener('click',e=>handleOpt(e,drawDrop));
+$('#fpBody').addEventListener('input',e=>{const t=e.target;if(!t.dataset.rp)return;setP(t.dataset.rp,+t.value);$(`[data-out="${t.dataset.rp}"]`).textContent=money(+t.value);cnt();});
+
+/* ============ NAV ============ */
+const IC={search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
+ roommates:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.8"/><path d="M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5M15 14.5c2.8 0 5 1.6 6 4.5"/></svg>',
+ saved:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11Z"/></svg>',
+ inbox:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H8l-4 4Z" stroke-linejoin="round"/></svg>',
+ me:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>'};
+function renderNav(){const un=S.convos.reduce((a,c)=>a+(c.unread||0),0);
+ $('#nav').innerHTML=[['search','Search'],['roommates','Roommates'],['saved','Saved'],['inbox','Inbox'],['me','Profile']].map(([k,t])=>`<button class="${S.view===k?'on':''}" data-v="${k}">${IC[k]}<span>${t}</span>${k==='inbox'&&un?`<i class="badge">${un}</i>`:''}</button>`).join('');
+ $$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));$('#meBtn').innerHTML=meAv(32);}
+function go(v){closeDropSilent();S.view=v;if(v!=='inbox')S.openConvo=null;render();}
+$('#meBtn').onclick=()=>go('me');
+function render(keep){const m=$('#main'),st=m.scrollTop;m.onclick=null;renderNav();({search:renderSearch,roommates:renderRoommates,saved:renderSaved,inbox:renderInbox,me:renderMe})[S.view]();m.scrollTop=keep?st:0;}
+
+/* ============ SEARCH (list / map) ============ */
+function homeCard(l){const lp=P[l.lister];
+ return `<div class="hcard" data-lid="${l.id}"><div class="ph">${art(l)}<span class="ptag">${l.type==='room'?'Room for rent':l.type==='house'?'House for rent':'Apartment for rent'}</span><button class="heart" data-save="${l.id}" aria-label="Save">${heartSvg(S.saved.has(l.id))}</button></div>
+  <div class="bd"><div class="hprice">${money(l.price)}<small>${perTxt(l)}</small></div><div class="hfacts">${bedsTxt(l)} | <b>${l.baths}</b> ba | <b>${l.sqft.toLocaleString()}</b> sqft</div><div class="haddr">${esc(l.address)}</div>
+  <div class="hby">${avatar(lp.av,18)} ${lp.role==='student'?'Listed by '+lp.name+' (current tenant)':esc(lp.org)} · ${availText(l)}${l.type==='room'?' · '+roomsAvail(l):''}</div></div></div>`;}
+function bindCards(root){(root||document).querySelectorAll('[data-lid]').forEach(c=>c.onclick=e=>{if(e.target.closest('[data-save]'))return;openListing(+c.dataset.lid);});
+ (root||document).querySelectorAll('[data-save]').forEach(b=>b.onclick=e=>{e.stopPropagation();const id=+b.dataset.save;S.saved.has(id)?S.saved.delete(id):S.saved.add(id);b.innerHTML=heartSvg(S.saved.has(id));toast(S.saved.has(id)?'Saved':'Removed from saved');});}
+function renderSearch(){
+ const H=homes();
+ $('#main').innerHTML=`<div style="position:sticky;top:0;background:#fff;z-index:4;padding:10px 12px 8px;border-bottom:1px solid var(--line)">
+  <div class="row"><div class="search" style="flex:1"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="q" placeholder="Search Boston neighborhoods" value="${esc(S.f.q)}"></div>
+  <div class="seg" style="flex:none"><button class="${S.searchMode==='list'?'on':''}" data-sm="list">List</button><button class="${S.searchMode==='map'?'on':''}" data-sm="map">Map</button></div></div>
+  <div style="margin-top:8px">${fbar('homes')}</div></div>
+  <div id="results"></div>`;
+ $('#q').oninput=e=>{S.f.q=e.target.value;drawResults();};
+ $$('[data-sm]').forEach(b=>b.onclick=()=>{S.searchMode=b.dataset.sm;renderSearch();});
+ bindFbar();drawResults();
+}
+function drawResults(){const H=homes(),r=$('#results');
+ if(S.searchMode==='list'){
+  r.innerHTML=`<div class="pad" style="padding-top:10px"><div class="between" style="margin-bottom:10px"><div style="font-size:13px;color:var(--muted)"><b style="color:var(--ink)">${H.length}</b> rentals in Boston</div><select class="sortsel" id="sort"><option value="new">Sort: Newest</option><option value="low">Price (low to high)</option><option value="high">Price (high to low)</option></select></div>
+   ${H.map(homeCard).join('')||'<div class="empty-state">No matching rentals. Try removing a filter.</div>'}</div>`;
+  $('#sort').value=S.f.sort;$('#sort').onchange=e=>{S.f.sort=e.target.value;drawResults();};bindCards(r);
+ }else renderMap(H);
+}
+
+/* ---- pannable Boston map ---- */
+const pathOf=pts=>pts.map((p,i)=>{const [x,y]=proj(p[1],p[0]);return(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}).join(' ');
+const polyOf=pts=>pathOf(pts)+'Z';
+const CH_UP=[[-71.200,42.363],[-71.180,42.364],[-71.165,42.361],[-71.152,42.365],[-71.138,42.369],[-71.125,42.369],[-71.118,42.365],[-71.114,42.358]];
+const CH_LO=[[-71.114,42.358],[-71.109,42.3535],[-71.100,42.3528],[-71.092,42.3555],[-71.082,42.3575],[-71.075,42.3605],[-71.068,42.3655],[-71.062,42.369],[-71.056,42.372]];
+const MYSTIC=[[-71.110,42.400],[-71.090,42.393],[-71.075,42.388],[-71.062,42.384],[-71.050,42.378]];
+const HARBOR=[[-71.056,42.374],[-71.052,42.369],[-71.0505,42.3645],[-71.0525,42.360],[-71.050,42.357],[-71.052,42.354],[-71.054,42.349],[-71.051,42.347],[-71.045,42.352],[-71.035,42.353],[-71.026,42.350],[-71.022,42.343],[-71.028,42.336],[-71.040,42.334],[-71.046,42.326],[-71.042,42.319],[-71.034,42.313],[-71.040,42.306],[-71.048,42.298],[-71.052,42.285],[-70.95,42.285],[-70.95,42.42],[-71.040,42.42],[-71.045,42.385],[-71.050,42.380]];
+const FORTPT=[[-71.054,42.349],[-71.058,42.343],[-71.060,42.336],[-71.057,42.336],[-71.055,42.343],[-71.051,42.347]];
+const EASTB=[[-71.042,42.369],[-71.036,42.362],[-71.024,42.359],[-71.012,42.365],[-71.004,42.378],[-71.010,42.392],[-71.030,42.392],[-71.040,42.382]];
+const PARKS=[[[-71.0710,42.3570],[-71.0640,42.3570],[-71.0620,42.3530],[-71.0705,42.3525]],[[-71.0985,42.3445],[-71.0905,42.3420],[-71.0935,42.3365],[-71.1010,42.3385]],[[-71.1060,42.2950],[-71.0800,42.2950],[-71.0780,42.3110],[-71.0990,42.3140]]];
+const POND=[[-71.1250,42.3195],[-71.1185,42.3190],[-71.1180,42.3125],[-71.1240,42.3120]];
+const ROADS=[{n:'Commonwealth Ave',p:[[-71.170,42.336],[-71.150,42.340],[-71.135,42.349],[-71.118,42.351],[-71.105,42.350],[-71.095,42.349],[-71.082,42.3505],[-71.072,42.3525]]},{n:'Mass Ave',p:[[-71.119,42.373],[-71.105,42.366],[-71.094,42.359],[-71.088,42.348],[-71.078,42.338],[-71.068,42.329]]},{n:'Huntington Ave',p:[[-71.079,42.348],[-71.088,42.342],[-71.098,42.337],[-71.110,42.332]]},{n:'Beacon St',p:[[-71.150,42.334],[-71.130,42.340],[-71.115,42.345],[-71.100,42.348],[-71.085,42.352],[-71.070,42.3565]]},{n:'Storrow Dr',p:[[-71.130,42.364],[-71.118,42.360],[-71.110,42.355],[-71.100,42.3545],[-71.085,42.3555],[-71.072,42.3605]]},{n:'Washington St',p:[[-71.059,42.356],[-71.064,42.348],[-71.070,42.340],[-71.080,42.329],[-71.095,42.315],[-71.110,42.300]]},{n:'Broadway',p:[[-71.110,42.395],[-71.095,42.392],[-71.080,42.386]]},{n:'Centre St',p:[[-71.118,42.300],[-71.112,42.312],[-71.105,42.322]]}];
+function renderMap(H){
+ const r=$('#results'),h=Math.max(320,Math.round(window.innerHeight*.52));let grid='';for(let i=-200;i<1000;i+=14)grid+=`M${i} -200V900M-200 ${i}H1000`;
+ r.innerHTML=`<div class="mapwrap"><svg id="mapsvg" height="${h}"><g id="world"><rect x="-300" y="-300" width="1400" height="1300" fill="#eef2f7"/><path d="${grid}" stroke="#e5eaf2" stroke-width=".5"/>
+  ${PARKS.map(p=>`<path d="${polyOf(p)}" fill="#cdeccf"/>`).join('')}<path d="${polyOf(HARBOR)}" fill="#a9c9f0"/><path d="${polyOf(FORTPT)}" fill="#a9c9f0"/><path d="${polyOf(EASTB)}" fill="#eef2f7"/>
+  <path d="${pathOf(MYSTIC)}" stroke="#a9c9f0" stroke-width="12" fill="none" stroke-linecap="round"/><path d="${pathOf(CH_UP)}" stroke="#a9c9f0" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${pathOf(CH_LO)}" stroke="#a9c9f0" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${polyOf(POND)}" fill="#a9c9f0"/>
+  ${ROADS.map(x=>`<path d="${pathOf(x.p)}" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/><path d="${pathOf(x.p)}" stroke="#fde68a" stroke-width="1.6" fill="none" stroke-linecap="round"/>`).join('')}</g><g id="ov"></g></svg>
+  <div class="mapctl"><button id="zin">+</button><button id="zout">−</button><button id="zre" style="font-size:14px">⌖</button></div></div>
+  <div style="padding:8px 14px 0;font-size:12.5px;color:var(--muted)"><b style="color:var(--ink)">${H.length}</b> rentals · drag to move, pinch or scroll to zoom</div>
+  <div class="carousel" id="car">${H.map(l=>`<button class="mini ${S.mapSel===l.id?'sel':''}" data-lid="${l.id}"><div class="th">${art(l)}</div><div style="min-width:0"><div style="font-weight:800;font-size:16px">${money(l.price)}<span style="font-size:12px;color:var(--muted);font-weight:600">${perTxt(l)}</span></div><div style="font-size:12.5px;color:var(--ink2)">${bedsTxt(l)} | ${l.baths} ba</div><div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(l.address)}</div></div></button>`).join('')}</div>`;
+ $$('#car [data-lid]').forEach(b=>b.onclick=()=>openListing(+b.dataset.lid));
+ if(!S.map)mapInit();applyMap();bindMap();
+}
+function mapInit(){const sv=$('#mapsvg'),w=sv.clientWidth,h=sv.clientHeight,[x,y]=proj(42.350,-71.095);S.map={z:1.1};S.map.tx=w/2-x*1.1;S.map.ty=h/2-y*1.1;}
+function applyMap(){const M=S.map;if(!$('#world'))return;$('#world').setAttribute('transform',`translate(${M.tx} ${M.ty}) scale(${M.z})`);
+ const sp=(la,ln)=>{const [x,y]=proj(la,ln);return[x*M.z+M.tx,y*M.z+M.ty];};let o='';
+ HOODS.forEach(([n,la,ln])=>{const [x,y]=sp(la,ln);o+=`<text x="${x}" y="${y}" text-anchor="middle" font-size="${M.z>2.2?12:10}" font-weight="700" fill="#64748b" opacity=".75" font-family="Plus Jakarta Sans,sans-serif" style="pointer-events:none">${n.toUpperCase()}</text>`;});
+ if(M.z>2)ROADS.forEach(r=>{const mid=r.p[Math.floor(r.p.length/2)],[x,y]=sp(mid[1],mid[0]);o+=`<text x="${x}" y="${y-5}" text-anchor="middle" font-size="9.5" fill="#92400e" font-weight="600" font-family="Plus Jakarta Sans,sans-serif" style="pointer-events:none">${r.n}</text>`;});
+ if(M.z>1.5)Object.values(SCHOOLS).forEach(s=>{const [x,y]=sp(s.lat,s.lng);o+=`<g style="pointer-events:none"><circle cx="${x}" cy="${y}" r="7" fill="#475569" stroke="#fff" stroke-width="2"/><text x="${x}" y="${y+3}" text-anchor="middle" font-size="8">🎓</text><text x="${x}" y="${y+18}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#475569" stroke="#fff" stroke-width="3" paint-order="stroke" font-family="Plus Jakarta Sans,sans-serif">${s.short}</text></g>`;});
+ homes().forEach(l=>{const [x,y]=sp(l.lat,l.lng),sel=S.mapSel===l.id,col=sel?'#0a2257':'#2563eb',t=l.price>=1000?'$'+(l.price/1000).toFixed(l.price%1000?1:0)+'k':'$'+l.price,w=t.length*7+14;
+  o+=`<g data-pin="${l.id}" style="cursor:pointer" transform="translate(${x} ${y})"><rect x="${-w/2}" y="-31" width="${w}" height="22" rx="11" fill="${col}" stroke="#fff" stroke-width="2"/><text y="-16" text-anchor="middle" font-size="11.5" font-weight="800" fill="#fff" font-family="Plus Jakarta Sans,sans-serif">${t}</text><path d="M-5 -10 0 -3 5 -10Z" fill="${col}"/><circle r="3" fill="${col}" stroke="#fff"/></g>`;});
+ $('#ov').innerHTML=o;}
+function zoomAt(px,py,f){const M=S.map,nz=Math.max(.7,Math.min(7,M.z*f));f=nz/M.z;M.tx=px-(px-M.tx)*f;M.ty=py-(py-M.ty)*f;M.z=nz;}
+function bindMap(){const svg=$('#mapsvg'),pts=new Map();let moved=0,pinT=null;const loc=e=>{const r=svg.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};};
+ svg.onpointerdown=e=>{if(!pts.size){moved=0;pinT=e.target.closest('[data-pin]');}pts.set(e.pointerId,loc(e));svg.setPointerCapture(e.pointerId);};
+ svg.onpointermove=e=>{if(!pts.has(e.pointerId))return;const pv=pts.get(e.pointerId),cu=loc(e);
+  if(pts.size===1){S.map.tx+=cu.x-pv.x;S.map.ty+=cu.y-pv.y;moved+=Math.abs(cu.x-pv.x)+Math.abs(cu.y-pv.y);}
+  else{const o=[...pts.entries()].find(([k])=>k!==e.pointerId)[1],d0=Math.hypot(pv.x-o.x,pv.y-o.y),d1=Math.hypot(cu.x-o.x,cu.y-o.y),mx=(cu.x+o.x)/2,my=(cu.y+o.y)/2;S.map.tx+=mx-(pv.x+o.x)/2;S.map.ty+=my-(pv.y+o.y)/2;if(d0>0)zoomAt(mx,my,d1/d0);moved+=20;}
+  pts.set(e.pointerId,cu);requestAnimationFrame(applyMap);};
+ const up=e=>{pts.delete(e.pointerId);if(!pts.size&&moved<6&&pinT)selectPin(+pinT.dataset.pin);if(!pts.size)pinT=null;};svg.onpointerup=up;svg.onpointercancel=up;
+ svg.onwheel=e=>{e.preventDefault();const p=loc(e);zoomAt(p.x,p.y,e.deltaY<0?1.15:1/1.15);applyMap();};
+ const c=()=>({x:svg.clientWidth/2,y:svg.clientHeight/2});$('#zin').onclick=()=>{const p=c();zoomAt(p.x,p.y,1.4);applyMap();};$('#zout').onclick=()=>{const p=c();zoomAt(p.x,p.y,1/1.4);applyMap();};$('#zre').onclick=()=>{mapInit();applyMap();};}
+function selectPin(id){S.mapSel=id;applyMap();$$('#car .mini').forEach(x=>x.classList.toggle('sel',+x.dataset.lid===id));const el=$(`#car [data-lid="${id}"]`);el&&el.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});}
+
+/* ============ SHEETS ============ */
+function openSheet(html,after){$('#sheetBody').innerHTML=html;$('#sheetBody').scrollTop=0;$('#sheet').classList.add('on');$('#backdrop').classList.add('on');after&&after();}
+function closeSheet(){$('#sheet').classList.remove('on');$('#backdrop').classList.remove('on');}
+$('#sheetClose').onclick=closeSheet;$('#backdrop').onclick=closeSheet;
+const personRow=pid=>{const p=P[pid];return `<button class="person-row" data-pid="${pid}">${avatar(p.av,44)}<div style="flex:1"><b>${esc(p.name)}</b><span>${p.role==='student'?SCHOOLS[p.school].short+' · '+p.prog:ROLE[p.role]+' · '+esc(p.org)}</span></div><span style="color:var(--b600);font-weight:700;font-size:13px">View</span></button>`;};
+
+function openListing(id){
+ const l=LST(id),lp=P[l.lister],saved=S.saved.has(id),mates=Object.values(P).filter(p=>p.listing===id),searching=people(true).filter(p=>p.sit!=='has').length;
+ openSheet(`<div class="dhero">${art(l)}<button class="heart" id="dSave" style="right:52px">${heartSvg(saved)}</button></div>
+  <div class="sec" style="padding-top:12px"><div class="hprice" style="font-size:26px">${money(l.price)}<small>${perTxt(l)}</small></div>
+   <div class="hfacts" style="font-size:15px">${bedsTxt(l)} | <b>${l.baths}</b> ba | <b>${l.sqft.toLocaleString()}</b> sqft</div><div class="haddr" style="font-size:14px">${esc(l.address)}</div>
+   <div class="chips" style="margin-top:10px"><span class="c">${l.type==='room'?'Room for rent':l.type==='house'?'House for rent':'Apartment for rent'}</span><span class="c">${availText(l)}</span>${l.type==='room'?`<span class="c">${roomsAvail(l)}</span>`:''}</div></div>
+  <div class="sec"><h5>Overview</h5><p style="margin:0;font-size:14.5px;line-height:1.55;color:var(--ink2)">${esc(l.desc)}</p></div>
+  ${mates.length?`<div class="sec"><h5>Roommates in this home</h5><div style="display:grid;gap:8px">${mates.map(p=>personRow(p.id)).join('')}</div></div>`:''}
+  ${l.type!=='room'&&l.beds>=2?`<div class="sec"><button class="rmcta" id="findRm"><div style="font-size:26px">🤝</div><div style="flex:1"><b style="font-size:14px;display:block">Need roommates to split ${money(l.price)}?</b><span style="font-size:12.5px;color:var(--muted)">${searching} students are looking for roommates right now</span></div><span style="color:var(--b600);font-weight:700">→</span></button></div>`:''}
+  <div class="sec"><h5>Facts & features</h5><div class="kv">
+   <span>Type</span><span>${{apartment:'Apartment',house:'Single family',room:'Room in shared home'}[l.type]}</span><span>Available</span><span>${availText(l).replace('Available ','')}</span>
+   <span>Lease</span><span>${l.lease}</span><span>Security deposit</span><span>${money(l.price)}</span><span>Laundry</span><span>${l.laundry}</span><span>Parking</span><span>${l.parking?'Yes':'No'}</span>
+   <span>Pets</span><span>${l.pets?'Allowed':'Not allowed'}</span><span>Heating</span><span>${l.heat}</span><span>Cooling</span><span>${l.cool}</span><span>Furnished</span><span>${l.furn?'Yes':'No'}</span><span>Utilities</span><span>${l.util}</span></div></div>
+  <div class="sec"><h5>${lp.role==='student'?'Listed by current tenant':'Listed by'}</h5>${personRow(l.lister)}</div>
+  <div class="sticky-cta"><button class="btn block" id="contact">💬 ${findConvo(l.lister)?'Open chat':'Message '+esc(lp.name.split(' ')[0])}</button></div>`,()=>{
+  $$('#sheetBody [data-pid]').forEach(b=>b.onclick=()=>openPerson(b.dataset.pid));
+  $('#dSave').onclick=()=>{S.saved.has(id)?S.saved.delete(id):S.saved.add(id);$('#dSave').innerHTML=heartSvg(S.saved.has(id));if(S.view!=='search')render(true);};
+  if($('#findRm'))$('#findRm').onclick=()=>{closeSheet();S.rf.sits=['together','room'];go('roommates');};
+  $('#contact').onclick=()=>{closeSheet();let c=findConvo(l.lister);if(!c)c=startConvo(l.lister,l.id,`Hi ${lp.name.split(' ')[0]}! I'm interested in ${l.address.split(',')[0]} (${money(l.price)}/mo). Is it still available? When could I see it?`,lp.role==='student'?'Hey! Yes, still available 🙌 Want to come by this weekend?':'Thanks for reaching out! It\'s available — I can show it Thursday 4pm or Saturday 11am.');S.view='inbox';S.openConvo=c.id;render();};
+ });
+}
+function openPerson(pid){
+ const p=P[pid],st=p.role==='student',l=p.listing&&LST(p.listing),conv=findConvo(pid),cm=st?common(p):[],theirs=LISTINGS.filter(x=>x.lister===pid&&x!==l);
+ openSheet(`<div style="background:linear-gradient(160deg,${p.av.bg},${p.av.sh}66);margin:6px 12px 0;border-radius:16px;display:grid;place-items:center;padding:18px">${avatar(p.av,130)}</div>
+  <div class="sec"><div class="h1">${esc(p.name)}${p.age?', '+p.age:''}</div><div style="color:var(--muted);font-size:13.5px">${st?`${SCHOOLS[p.school].name} · ${p.prog} · ${p.pr}`:ROLE[p.role]+' · '+esc(p.org)}</div>
+   <p style="font-size:14.5px;line-height:1.5;color:var(--ink2)">${esc(p.bio)}</p></div>
+  ${st&&cm.length?`<div class="sec"><div class="common"><div class="lbl">You have in common</div><div class="chips">${cm.map(c=>`<span class="cc">${c}</span>`).join('')}</div></div></div>`:''}
+  ${st?`<div class="sec"><h5>What they're looking for</h5><div class="kv"><span>Situation</span><span>${sitText(p)}</span><span>Budget</span><span>${money(p.budget[0])}${p.budget[1]!==p.budget[0]?'–'+money(p.budget[1]):''}/mo</span><span>Move-in</span><span>${p.moveIn}</span><span>Schedule</span><span>${p.sleep==='night'?'Night owl':'Early bird'}</span><span>Cleanliness</span><span>${['','Relaxed','Tidy','Very tidy'][p.clean]}</span><span>Home vibe</span><span>${{quiet:'Quiet',balanced:'Balanced',social:'Social'}[p.social]}</span><span>Guests</span><span>${p.guests}</span><span>Pets</span><span>${p.pets?'Yes':'No'}</span><span>Smoking</span><span>${p.smoke?'Yes':'No'}</span></div></div>`:''}
+  ${l?`<div class="sec"><h5>The place they live in</h5>${homeCard(l)}</div>`:''}
+  ${theirs.length?`<div class="sec"><h5>Their listings</h5>${theirs.map(homeCard).join('')}</div>`:''}
+  ${st?`<div class="sec">${p.prompts.map(([q,a])=>`<div class="prompt"><div style="font-size:12px;font-weight:700;color:var(--b700);margin-bottom:4px">${q}</div><div style="font-size:15px;font-weight:600">${esc(a)}</div></div>`).join('')}<div class="chips">${(p.tags||[]).map(t=>`<span class="c">${t}</span>`).join('')}</div></div>`:''}
+  <div class="sticky-cta">${conv?`<button class="btn block" id="pChat">💬 Open chat</button>`:st?`<button class="btn ghost" style="flex:1" id="pPass">Pass</button><button class="btn" style="flex:2" id="pLike">👋 Say hi</button>`:`<button class="btn block" id="pChat">💬 Message</button>`}</div>`,()=>{
+  bindCards($('#sheetBody'));
+  if($('#pChat'))$('#pChat').onclick=()=>{closeSheet();let c=conv||startConvo(pid,null,null);S.view='inbox';S.openConvo=c.id;render();};
+  if($('#pPass'))$('#pPass').onclick=()=>{S.rmPassed.add(pid);closeSheet();if(S.view==='roommates')drawStack();};
+  if($('#pLike'))$('#pLike').onclick=()=>{closeSheet();S.rmLiked.add(pid);S.hist.push(pid);likePerson(p);if(S.view==='roommates')drawStack();};
+ });
+}
+
+/* ============ ROOMMATES (swipe) ============ */
+function renderRoommates(){
+ $('#main').innerHTML=`<div class="swipe-wrap">${fbar('rm')}<div class="stack" id="stack"></div>
+  <div class="actions"><button class="act sm" id="undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><path d="M4 10h11a5 5 0 0 1 0 10h-3"/><path d="m8 6-4 4 4 4"/></svg></button>
+   <button class="act" id="no"><svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+   <button class="act" id="yes"><svg viewBox="0 0 24 24"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11Z" fill="#10b981"/></svg></button></div>
+  <div class="hint">Swipe right to say hi · left to pass · tap to see their profile</div></div>`;
+ bindFbar();drawStack();
+}
+function rmCard(p,back,avHtml){const pv=p.id==='preview',cm=pv?[]:common(p),l=p.listing&&LST(p.listing);
+ return `<div class="card ${back?'back':''}"><div class="stamp yes">SAY HI</div><div class="stamp no">PASS</div>
+  <div class="rm-hero" style="background:linear-gradient(160deg,${p.av.bg},${p.av.sh}55)">${avHtml||avatar(p.av,180)}
+   <div class="tagrow"><span class="tag">${sitLabel(p)}</span></div><div class="shade"></div>
+   <div class="over"><h3>${esc(p.name)}, ${p.age}</h3><div style="font-size:13px;opacity:.92">${SCHOOLS[p.school].short} · ${p.prog}</div></div></div>
+  <div class="info">${l?`<div style="font-size:12.5px;color:var(--ink2)">Their place: <b>${money(l.price)}/mo per room</b> · ${l.hood}</div>`:`<div style="font-size:12.5px;color:var(--ink2)">Budget <b>${money(p.budget[0])}–${money(p.budget[1])}/mo</b> · Moving ${p.moveIn}</div>`}
+   ${pv?`<div class="chips">${(p.tags||[]).map(t=>`<span class="c">${t}</span>`).join('')}</div>`:cm.length?`<div class="common"><div class="lbl">You have in common</div><div class="chips">${cm.slice(0,5).map(c=>`<span class="cc">${c}</span>`).join('')}${cm.length>5?`<span class="cc">+${cm.length-5} more</span>`:''}</div></div>`:'<div style="font-size:12.5px;color:var(--muted)">Nothing obvious in common yet — tap to see their profile.</div>'}</div></div>`;}
+function drawStack(){const q=people(),st=$('#stack');if(!st)return;
+ if(!q.length){st.innerHTML=`<div class="empty"><div><div style="font-size:44px">🫶</div><h3>No more people right now</h3><p>Loosen a filter above to see more.</p><button class="btn ghost sm" id="reset">Start over</button></div></div>`;$('#reset').onclick=()=>{S.rmPassed.clear();S.rmLiked.clear();drawStack();};bindActs(null);return;}
+ const top=q[0],nx=q[1];st.innerHTML=(nx?rmCard(nx,1):'')+rmCard(top);const el=st.querySelector('.card:not(.back)');
+ const decide=d=>{(d==='yes'?S.rmLiked:S.rmPassed).add(top.id);S.hist.push(top.id);if(d==='yes')likePerson(top);drawStack();};
+ attachDrag(el,decide,()=>openPerson(top.id));bindActs({el,decide});}
+function bindActs(c){$('#no').onclick=()=>c&&fly(c.el,'no',c.decide);$('#yes').onclick=()=>c&&fly(c.el,'yes',c.decide);
+ $('#undo').onclick=()=>{const h=S.hist.pop();if(!h)return toast('Nothing to undo');S.rmLiked.delete(h);S.rmPassed.delete(h);drawStack();};}
+function fly(el,d,cb){el.style.transition='transform .35s,opacity .35s';el.style.transform=`translate(${d==='yes'?600:-600}px,40px) rotate(${d==='yes'?25:-25}deg)`;el.style.opacity=0;el.querySelector('.stamp.'+d).style.opacity=1;setTimeout(()=>cb(d),280);}
+function attachDrag(el,decide,open){let sx=0,sy=0,dx=0,dy=0,down=false;const sY=el.querySelector('.stamp.yes'),sN=el.querySelector('.stamp.no');
+ el.addEventListener('pointerdown',e=>{down=true;sx=e.clientX;sy=e.clientY;dx=dy=0;el.setPointerCapture(e.pointerId);el.style.transition='none';});
+ el.addEventListener('pointermove',e=>{if(!down)return;dx=e.clientX-sx;dy=e.clientY-sy;el.style.transform=`translate(${dx}px,${dy}px) rotate(${dx/18}deg)`;sY.style.opacity=Math.max(0,Math.min(1,dx/100));sN.style.opacity=Math.max(0,Math.min(1,-dx/100));});
+ const end=()=>{if(!down)return;down=false;if(dx>110)return fly(el,'yes',decide);if(dx<-110)return fly(el,'no',decide);el.style.transition='transform .3s';el.style.transform='';sY.style.opacity=sN.style.opacity=0;if(Math.abs(dx)<6&&Math.abs(dy)<6)open();};
+ el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);}
+
+/* ============ CHAT ============ */
+const findConvo=pid=>S.convos.find(c=>c.person===pid);
+function startConvo(pid,lid,text,reply){let c=findConvo(pid);if(c)return c;
+ c={id:'c'+(S.nextId++),person:pid,listing:lid,unread:0,msgs:[{w:'sys',t:'New conversation · Nov 13'}]};if(text)c.msgs.push({w:'me',t:text});S.convos.unshift(c);
+ if(reply)setTimeout(()=>{c.msgs.push({w:'them',t:reply});if(S.view==='inbox'&&S.openConvo===c.id)renderInbox();else{c.unread++;renderNav();toast('💬 New message from '+P[pid].name);}},3500);
+ renderNav();return c;}
+function likePerson(p){const cm=common(p),t=`Hey ${p.name.split(' ')[0]}! ${cm.length?'Looks like we have a few things in common ('+cm.slice(0,2).map(x=>x.slice(2).trim().toLowerCase()).join(', ')+'). ':''}${p.sit==='has'?'Is your room still open? I\'d love to see it.':'Want to grab coffee and talk about finding a place?'}`;
+ const c=startConvo(p.id,p.listing||null,t,p.sit==='has'?'Hi!! Yes it\'s still open. Want to FaceTime first and then come see it?':'Hey! Coffee sounds great ☕ Free Wednesday after 3?');
+ const m=$('#match');m.innerHTML=`<div class="row">${meAv(76)}<div style="margin-left:-14px">${avatar(p.av,76)}</div></div><h2>Said hi!</h2><p>Your message went to <b>${esc(p.name)}</b>. They'll decide if they want to chat.</p><div class="preview">${esc(t)}</div><div class="row" style="margin-top:8px"><button class="btn ghost" id="mKeep">Keep swiping</button><button class="btn" style="background:#fff;color:var(--b700)" id="mOpen">Open chat</button></div>`;
+ m.classList.add('on');$('#mKeep').onclick=()=>m.classList.remove('on');$('#mOpen').onclick=()=>{m.classList.remove('on');S.view='inbox';S.openConvo=c.id;render();};}
+function renderInbox(){const m=$('#main');
+ if(S.openConvo){const c=S.convos.find(x=>x.id===S.openConvo);c.unread=0;renderNav();const p=P[c.person],l=c.listing?LST(c.listing):(p.listing?LST(p.listing):null);
+  m.innerHTML=`<div class="thread"><div class="thread-h"><button id="back" style="padding:6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg></button>
+   <button class="who" id="who">${avatar(p.av,38)}<div><b style="display:block;font-size:14.5px">${esc(p.name)}</b><span style="font-size:12px;color:var(--b600);font-weight:600">View profile</span></div></button></div>
+   ${l?`<button class="prop-strip" id="prop"><div class="th">${art(l)}</div><div style="flex:1;min-width:0"><b style="font-size:13px;display:block">${money(l.price)}${perTxt(l)} · ${l.title}</b><span style="font-size:12px;color:var(--muted)">${esc(l.address)}</span></div><span style="color:var(--b600);font-weight:700;font-size:12px">View →</span></button>`:''}
+   <div class="msgs" id="msgs">${c.msgs.map(x=>`<div class="bub ${x.w}">${esc(x.t)}</div>`).join('')}</div>
+   <form class="composer" id="comp"><input id="mi" placeholder="Message…" autocomplete="off"><button class="btn sm" type="submit">Send</button></form></div>`;
+  $('#msgs').scrollTop=1e6;$('#back').onclick=()=>{S.openConvo=null;renderInbox();};$('#who').onclick=()=>openPerson(c.person);if(l)$('#prop').onclick=()=>openListing(l.id);
+  $('#comp').onsubmit=e=>{e.preventDefault();const t=$('#mi').value.trim();if(!t)return;c.msgs.push({w:'me',t});renderInbox();setTimeout(()=>{const R=['Sounds good! 👍','Sure, that works for me.','Great, see you then!','Let me check and get back to you.'];c.msgs.push({w:'them',t:R[c.msgs.length%4]});if(S.openConvo===c.id&&S.view==='inbox')renderInbox();else{c.unread++;renderNav();}},1800);};return;}
+ m.innerHTML=`<div class="pad" style="padding-bottom:6px"><div class="h1">Inbox</div></div>${S.convos.map(c=>{const p=P[c.person],l=c.listing&&LST(c.listing);return `<button class="conv" data-id="${c.id}">${avatar(p.av,48)}<div class="t"><b>${esc(p.name)} <span style="display:inline;font-weight:600;color:var(--muted);font-size:12px">· ${p.role==='student'?'Roommate':ROLE[p.role]}</span></b>${l?`<span style="color:var(--b700);font-weight:600">${money(l.price)}/mo · ${esc(l.address.split(',')[0])}</span>`:''}<span>${esc(c.msgs[c.msgs.length-1].t)}</span></div>${c.unread?`<span style="background:var(--b600);color:#fff;font-size:11px;min-width:20px;height:20px;border-radius:10px;display:grid;place-items:center">${c.unread}</span>`:''}</button>`;}).join('')}`;
+ $$('.conv').forEach(b=>b.onclick=()=>{S.openConvo=b.dataset.id;renderInbox();});}
+
+/* ============ SAVED ============ */
+function renderSaved(){const H=LISTINGS.filter(l=>S.saved.has(l.id)),R=[...S.rmLiked].map(id=>P[id]);
+ $('#main').innerHTML=`<div class="pad"><div class="h1">Saved</div><p class="lead">Homes you hearted and people you said hi to.</p>
+  <h4 style="margin:6px 0 10px">Homes (${H.length})</h4>${H.map(homeCard).join('')||'<p class="lead">Tap ♡ on any listing to save it.</p>'}
+  <h4 style="margin:16px 0 10px">Roommates (${R.length})</h4><div style="display:grid;gap:8px">${R.map(p=>personRow(p.id)).join('')||'<p class="lead">Swipe right in Roommates to say hi.</p>'}</div></div>`;
+ bindCards($('#main'));$$('#main [data-pid]').forEach(b=>b.onclick=()=>openPerson(b.dataset.pid));}
+
+/* ============ PROFILE ============ */
+function renderMe(){const m=S.me;
+ const sw=(path,arr)=>`<div class="swatches">${arr.map(c=>`<button class="swatch ${getP(path)===c?'on':''}" style="background:${c}" data-p="${path}" data-v='${JSON.stringify(c)}'></button>`).join('')}</div>`;
+ $('#main').innerHTML=`<div class="pad">
+  <div class="me-card"><div class="row" style="gap:14px">${meAv(80)}<div><div class="h1" style="font-size:20px;margin:0">${esc(m.name)}, ${m.age}</div><div style="font-size:13px;color:var(--muted)">${school().short} · ${esc(m.prog)}</div></div></div>
+   <button class="btn ghost sm block" id="prev" style="margin-top:12px">👀 Preview my roommate card</button></div>
+  <div class="me-card"><h4>Photo / avatar</h4><p class="sub">Shown on your roommate card.</p>
+   <div class="hairs">${HAIRS.map(h=>`<button class="${m.av.h===h?'on':''}" data-p="me.av.h" data-v='"${h}"'>${avatar({...m.av,h,b:false,g:false},42)}</button>`).join('')}</div>
+   <div class="fp-h">Skin tone</div>${sw('me.av.s',SK)}<div class="fp-h">Hair color</div>${sw('me.av.hc',HC)}<div class="fp-h">Top</div>${sw('me.av.sh',SH)}
+   <div class="opts"><button class="opt ${m.av.g?'on':''}" data-p="me.av.g" data-b="1">👓 Glasses</button><button class="opt ${m.av.b?'on':''}" data-p="me.av.b" data-b="1">🧔 Beard</button></div>
+   <label class="btn ghost sm" style="cursor:pointer">📷 Upload a photo<input type="file" accept="image/*" id="photoIn" style="display:none"></label></div>
+  <div class="me-card"><h4>About you</h4>
+   <div class="two"><div class="field"><label>Name</label><input data-in="me.name" value="${esc(m.name)}"></div><div class="field"><label>Age</label><input type="number" data-in="me.age" data-num="1" value="${m.age}"></div></div>
+   <div class="two"><div class="field"><label>Pronouns</label><select data-in="me.pr">${['she/her','he/him','they/them'].map(x=>`<option ${m.pr===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>School</label><select data-in="me.school">${Object.entries(SCHOOLS).map(([k,s])=>`<option value="${k}" ${m.school===k?'selected':''}>${s.short}</option>`).join('')}</select></div></div>
+   <div class="field"><label>Year & program</label><input data-in="me.prog" value="${esc(m.prog)}"></div><div class="field"><label>Bio</label><textarea data-in="me.bio" rows="3">${esc(m.bio)}</textarea></div>
+   <div class="fp-h">Interests</div><div class="opts">${INTERESTS.map(t=>mopt('me.tags',t,t)).join('')}</div></div>
+  <div class="me-card"><h4>Roommate preferences</h4><p class="sub">Used to show what you have in common with people.</p>
+   <div class="fp-h">My situation</div><div class="opts" style="display:grid">${opt('me.sit','room','🛏️ I need a room')}${opt('me.sit','together','🔎 I want roommates to search with')}${opt('me.sit','has','🏠 I have a place and need roommates')}</div>
+   <div class="fp-h">Who's moving?</div><div class="opts">${[1,2,3].map(n=>opt('me.group',n,['','Just me','Me + 1 friend','Me + 2 friends'][n])).join('')}</div>
+   <div class="fp-h">Move-in · ${mvLabel(m.mv)}</div>${mvPicker('me.mv',false)}
+   <div class="fp-h">Max budget</div><div class="range-row"><span></span><span data-out="me.maxBudget">${money(m.maxBudget)}</span></div><input type="range" min="700" max="3000" step="50" value="${m.maxBudget}" data-rp="me.maxBudget">
+   <div class="fp-h">Schedule</div><div class="opts">${opt('me.sleep','early','☀️ Early bird')}${opt('me.sleep','night','🌙 Night owl')}</div>
+   <div class="fp-h">Cleanliness</div><div class="opts">${opt('me.clean',1,'Relaxed')}${opt('me.clean',2,'Tidy')}${opt('me.clean',3,'Very tidy')}</div>
+   <div class="fp-h">Home vibe</div><div class="opts">${opt('me.social','quiet','🤫 Quiet')}${opt('me.social','balanced','⚖️ Balanced')}${opt('me.social','social','🎉 Social')}</div>
+   <div class="fp-h">Guests over</div><div class="opts">${['Rarely','Sometimes','Often'].map(x=>opt('me.guests',x,x)).join('')}</div>
+   ${chk('me.pets','I\'m fine living with pets')}${chk('me.smoke','I smoke')}</div></div>`;
+ const main=$('#main');main.onclick=e=>{if(e.target.closest('#photoIn'))return;handleOpt(e,()=>render(true));};
+ $$('[data-in]').forEach(i=>i.onchange=()=>{setP(i.dataset.in,i.dataset.num?+i.value:i.value);render(true);});
+ $$('[data-rp]').forEach(i=>i.oninput=()=>{setP(i.dataset.rp,+i.value);$(`[data-out="${i.dataset.rp}"]`).textContent=money(+i.value);});
+ $('#photoIn').onchange=e=>{const f=e.target.files[0];if(f){S.me.photo=URL.createObjectURL(f);render(true);}};
+ $('#prev').onclick=e=>{e.stopPropagation();const p={...m,id:'preview',moveIn:mvLabel(m.mv),budget:[Math.min(1000,m.maxBudget),m.maxBudget],spots:1,role:'student'};
+  openSheet(`<div class="sec" style="padding-top:20px"><div class="h1">Your roommate card</div><p class="lead">This is what other students see when they swipe.</p><div style="position:relative;height:470px">${rmCard(p,0,meAv(180))}</div></div>`);};
+}
+render();
+</script>
+</body>
+</html>
